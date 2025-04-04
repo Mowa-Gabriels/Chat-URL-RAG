@@ -2,8 +2,8 @@
 from dotenv import load_dotenv
 from langchain_community.document_loaders import UnstructuredURLLoader, PyPDFLoader, TextLoader, Docx2txtLoader,YoutubeLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS,Chroma
-from langchain_chroma import Chroma
+from langchain_community.vectorstores import FAISS,
+# from langchain_chroma import Chroma
 from langchain.chains import RetrievalQA
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -90,8 +90,8 @@ if resource_type in ["PDF", "DOC", "TXT"]:
                 if selected_vector_store == "FAISS":
                     vector_store = FAISS.from_documents(pages_chunks, emb_model)
                 else:
-                    persist_directory = 'db'
-                    vector_store = Chroma.from_documents(documents=pages_chunks,embedding=emb_model,persist_directory=persist_directory)
+                    st.warning("Chroma not available!")
+                    st.stop()
                 retriever = vector_store.as_retriever()
                 st.success(f"File processed and stored in {selected_vector_store}")
                 
@@ -113,10 +113,8 @@ elif resource_type == "URL":
                         if selected_vector_store == "FAISS":
                             vector_store = FAISS.from_documents(pages_chunks, emb_model)
                         else:
-                            persist_directory = 'db'
-                            vector_store = Chroma.from_documents(documents=pages_chunks,
-                                    embedding=emb_model,
-                                    persist_directory=persist_directory)
+                            st.warning("Chroma not available!")
+                            st.stop()
                         st.success(f"File processed and stored in {selected_vector_store}")
                         retriever = vector_store.as_retriever()
                     except Exception as e:
