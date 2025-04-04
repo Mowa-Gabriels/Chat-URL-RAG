@@ -9,12 +9,12 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from langchain_core.prompts import PromptTemplate
-from langchain_huggingface.llms.huggingface_endpoint import HuggingFaceEndpoint
 from langchain_community.document_loaders.firecrawl import FireCrawlLoader
 from llama_index.readers.youtube_transcript import YoutubeTranscriptReader
 from llama_index.core import VectorStoreIndex
 from langchain.docstore.document import Document
-from llama_index.llms.gemini import Gemini
+
+from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core import Settings
 from langchain import embeddings
 import os
@@ -80,7 +80,9 @@ if resource_type in ["PDF", "DOC", "TXT"]:
                         f.write(uploaded_file.getbuffer())
                     loader = Docx2txtLoader("temp.docx")
                 elif resource_type == "TXT":
-                    loader = TextLoader(uploaded_file)
+                    with open("temp.txt", "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                    loader = TextLoader("temp.txt")
                 pages = loader.load_and_split()
                 text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
                 pages_chunks = text_splitter.split_documents(pages)
@@ -127,7 +129,7 @@ elif resource_type == "YOUTUBE":
     if url_input and st.sidebar.button("Process Video"):
             with st.spinner("Processing URL..."):
                 try:
-                    llm = Gemini(model="models/gemini-2.0-flash")
+                    llm = GoogleGenAI(model="gemini-2.0-flash")
                     Settings.embed_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-mpnet-base-v2")
                     Settings.llm = llm
                     Settings.chunk_size = 100
@@ -145,35 +147,44 @@ elif resource_type == "YOUTUBE":
                     st.error(f"Error processing {resource_type}: {e}")
                     st.stop()
 
-if 'youtube_engine' in st.session_state: #Check if the engine exists.
-    if user_query := st.chat_input("Ask me anything about the Youtube video: "):
+
+# --- YouTube Query Section ---
+if 'youtube_engine' in st.session_state:
+    if user_query := st.chat_input("Ask me anything about the YouTube video: "):
         with st.spinner("Generating response..."):
             ai_response = st.session_state.youtube_engine.query(user_query)
             st.write(ai_response.response)
-            
 
-
-
+# --- Model Loading & QA Chain Setup for Document-Based Retrieval ---
 if 'retriever' in locals():
     if selected_model == "Gemini-2.0-flash":
         llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", api_key=GOOGLE_API_KEY)
     elif selected_model == "Mistral-7B-Instruct-v0.3":
-        st.warning("Not Available!")
+        st.warning("Mistral-7B-Instruct-v0.3 not available!")
+        st.stop()
         # llm = HuggingFaceEndpoint(task='text-generation', model="mistralai/Mistral-7B-Instruct-v0.3", max_new_tokens=1024, temperature=0.3, huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN)
-
     QA_PROMPT = PromptTemplate(template=template, input_variables=["context"])
-    query_retriever_chain = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, return_source_documents=True, chain_type_kwargs={"prompt": QA_PROMPT})
+    query_retriever_chain = RetrievalQA.from_chain_type(
+        llm=llm,
+        chain_type="stuff",
+        retriever=retriever,
+        return_source_documents=True,
+        chain_type_kwargs={"prompt": QA_PROMPT}
+    )
+else:
+    query_retriever_chain = None
+
+# --- Main Content Area for Document-Based Retrieval ---
+if query_retriever_chain:
     if user_query := st.chat_input("Ask me anything: "):
         with st.spinner("Generating response..."):
             response = query_retriever_chain({"query": user_query})
-            st.write(response["result"])
-            with st.expander("Source Documents"):
-                for doc in response["source_documents"]:
-                    st.write(doc.page_content)
+        st.write(f"🤖 AI Answer: {response['result']}")
+        with st.expander("Source Documents"):
+            for doc in response["source_documents"]:
+                st.write(doc.page_content)
 else:
-     st.subheader(f"🔎 {resource_type} Analysis")
-     user_query = st.text_input("Ask a question based on the selected resource:")
-     if user_query:
-        st.error("No knowledge-base available. Please ensure a valid resource is processed.")
-
-
+    st.subheader(f"🔎 {resource_type} Analysis")
+    user_query = st.chat_input("Ask a question based on the selected resource:")
+    if user_query:
+        st.error("No knowlegde-base available. Please ensure a valid resource is processed.")

@@ -1,0 +1,164 @@
+Product Name
+ResQ
+Objectives
+Reduce wait times between patients and the clinic for various consultations, including radiological care.
+Enable patients to easily book, reschedule, or cancel in-person appointments, including radiology appointments (e.g., X-rays, MRIs).
+Provide an intuitive platform for patients to manage all aspects of their healthcare appointments, including diagnostic services.
+
+
+Status
+To Do
+Product Manager
+Mowa Ijasanmi
+
+
+
+
+
+
+
+Overview
+This PRD outlines the functionalities and requirements for the in-clinic consultation and booking system, where patients can book consultations, screening and scans with listed diagnostic healthcare providers, specialists, and imaging. It allows patients to search for providers based on various criteria (including radiology services), follow a streamlined booking flow, and manage their appointments. patients can access both medical and diagnostic care with ease.
+Supported Platforms
+Responsive web application accessible via browsers.
+
+Out-of-Scope
+App compatibility with Android and iOS
+Comprehensive Electronic Health Record (EHR) management integration.
+AI-powered chatbot
+
+Success Metrics
+Adoption Rate: Percentage of clinic patients using the app.
+Appointment Booking Rate: Number of appointments booked through the app.
+User Satisfaction: Measured through in-app feedback and ratings.
+Reduction in No-Shows: Decrease in missed appointments.
+Time Saved: Reduction in patient time at clinics.
+Design
+
+
+
+Functional Requirements
+User Registration
+The system allows users to register using their email address, phone number, or social accounts e.g. Google.
+It provides a registration form where users can enter their full name, email address, phone number, and
+password.
+A verification link is provided via email to complete the registration process.
+The system displays appropriate error messages for incomplete or invalid registration details.
+
+User Authentication
+The system allows users to log in using their registered email address, phone number, or social media accounts.
+It provides an option to keep users logged in on trusted devices.
+Users can reset their password through a "Forgot Password" link.
+The system displays appropriate error messages for incorrect login credentials or locked accounts.
+
+Profile Management
+The system creates a profile for users after successful registration and authentication.
+The system provides an interface for users to enter and update their personal information, including name, contact details, date of birth, and address.
+The system allows users to upload a profile picture.
+The system allows users to change their password from the profile management section.
+
+Searching  and Filtering
+The system allows users to search for diagnostic healthcare providers and Specialists by name, speciality, and medical niche (e.g., dentistry, mental health, physiotherapy).
+The system offers autocomplete suggestions as patients type in the search bar.
+The system supports filtering search results by location, availability, and patient ratings
+The system displays a list of filtered providers based on the search criteria.
+
+
+Appointment Booking
+
+Pre-screening questions are presented to assess if patients may be at risk or need medical advice before receiving healthcare.
+A link is provided to reroute patients to ambulance services in an emergency.
+The system displays appropriate messages and alerts based on the responses to pre-screening questions.
+The system displays a business page for each diagnostic healthcare provider, including their name, speciality, list of services, qualifications, experience, patient reviews, and detailed information about the provider’s services.
+The user clicks a service and the system provides a calendar view to display available time slots, duration summary and fee.
+The system provides an interface for users to select a desired date and time for an appointment.
+The system redirects patients to a booking confirmation page that includes a scheduling summary(the selected day and time), the option to cancel, the appointment policy, and the booking form.
+The booking form includes:
+who the appointment is for (myself or someone else), 
+whether the patient is a registered patient or has been to the hospital before, 
+notification preferences.
+The preference allows patients to choose who receives notifications for the booking and reminders for the appointment(either the patient or someone else).
+The system allows patients to pre-save answers to booking form questions for faster completion in future bookings.
+The system allows patients to save providers as favourites for quick access in the future.
+Upon successful payment, the system sends instant confirmation of appointment bookings and provides an option to add to personal calendars.
+Unauthenticated/Unregistered User
+Unauthenticated/Unregistered users are shown a “Guest details” form at VIII
+
+Confirmation and Notifications
+ The system sends confirmation notifications via email, and SMS to patients and providers.
+ The system sends reminder notifications to patients before the appointment.
+
+Payment Processing
+ The system integrates with secure payment gateways to process booking fees(paystack, flutterwave).
+  It supports multiple payment options (debit card and bank transfer).
+ It generates and manages invoices and receipts.
+ Users can view payment history and transaction details.
+ The system supports discount codes and promotional offers.
+
+ Appointment Management
+ The system allows users to view upcoming and past appointments.
+The system allows users to reschedule previous and recurring appointments.
+ The system provides a detailed view of appointment details, including date, time, location, and specialist information.
+
+Reviews and Ratings
+ The system allows users to leave reviews and ratings after appointments.
+ The system displays aggregated ratings and reviews for each provider.
+ The system enables users to edit or delete their reviews.
+ There is a moderation process for reviews to ensure they meet community guidelines.
+
+Communication Tools:
+ The system sends push notifications for appointment confirmations, reminders, and important updates.
+ The system includes email and SMS notification options.
+ Users can log all complaints for support.
+
+Location and Navigation(3rd Party)
+ The system integrates with 3rd-party maps to provide easy navigation to the appointment location.
+ The system provides directions and estimated travel time.
+ The system allows users to view and share the location details.
+
+Support and Assistance
+ The system includes a comprehensive FAQ section and user guides.
+ Contact support via chat, email, or phone is readily available to users
+ The system provides automated responses to common queries through a chatbot.
+
+
+Non-Functional Requirements
+
+Performance
+ 
+Efficiently handle up to 10,000 concurrent users without performance degradation.
+The system shall respond to user actions within 3 seconds under normal load conditions.
+Maintain a response time of less than 5 seconds for 95% of transactions under peak load conditions.
+Fully optimised database queries to ensure efficient data retrieval and storage.
+The system shall use content delivery networks (CDNs) to improve the load times of static resources.
+
+Reliability
+An uptime of 99.9%, ensuring high availability.
+Implementation of data backup mechanisms to prevent data loss..
+	
+Usability
+A responsive design that works on various devices, including desktops, tablets, and smartphones.
+Clear and concise error messages and guidance for resolving issues.
+User-friendly navigation with a minimal learning curve for new users.
+Include comprehensive help documentation and support resources.
+
+Security
+The system implements role-based access control (RBAC) to manage user permissions.
+Encrypt sensitive data, such as passwords and payment information, using strong encryption algorithms.
+The system ensures compliance with relevant data protection regulations.
+The system protects against common web application vulnerabilities; SQL injection, XSS, and CSRF.
+
+Maintainability
+The system uses a modular architecture to facilitate easy updates and maintenance.
+Seamless deployment of updates and patches with minimal downtime.
+The system has a version control system in place to manage code changes and rollback if necessary.
+The system ensures that all third-party libraries and dependencies are up-to-date and secure.
+The system supports easy integration with other systems and services through well-documented APIs.***
+
+
+
+
+
+
+
+
