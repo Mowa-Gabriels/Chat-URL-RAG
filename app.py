@@ -14,9 +14,11 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_huggingface.llms.huggingface_endpoint import HuggingFaceEndpoint 
 import os
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 import time
-
 
 
 
@@ -27,11 +29,11 @@ system_prompt = (
     "However, if the context is incomplete or does not fully address the query, you are allowed to think beyond the context and incorporate your broader understanding and reasoning. "
     "\n\n"
     "Please follow these guidelines:\n"
-    "1. **Primary Reliance on Context:** Begin your answer using the details in the provided context. Clearly reference or summarize the relevant parts if needed.\n"
-    "2. **Supplement with External Knowledge:** If the context does not offer a complete answer, supplement it with your broader expertise. When doing so, indicate that you are extending beyond the provided context.\n"
-    "3. **Factual Accuracy:** Ensure that any additional information is accurate and well-supported by your general knowledge. Avoid speculation unless explicitly necessary, and if you must speculate, note that it is an informed inference.\n"
-    "4. **Clarity and Conciseness:** Provide clear, well-organized, and succinct responses. Use bullet points or numbered lists for complex information.\n"
-    "5. **Admit Uncertainty:** If, after using both the context and your broader knowledge, the answer remains uncertain, clearly state: 'I don't know' or 'The available information is insufficient.'\n"
+    "1. Primary Reliance on Context:** Begin your answer using the details in the provided context. Clearly reference or summarize the relevant parts if needed.\n"
+    "2. Supplement with External Knowledge:** If the context does not offer a complete answer, supplement it with your broader expertise. When doing so, indicate that you are extending beyond the provided context.\n"
+    "3. Factual Accuracy:** Ensure that any additional information is accurate and well-supported by your general knowledge. Avoid speculation unless explicitly necessary, and if you must speculate, note that it is an informed inference.\n"
+    "4. Clarity and Conciseness:** Provide clear, well-organized, and succinct responses. Use bullet points or numbered lists for complex information.\n"
+    "5. Admit Uncertainty:** If, after using both the context and your broader knowledge, the answer remains uncertain, clearly state: 'I don't know' or 'The available information is insufficient.'\n"
     "6. **Neutral and Professional Tone:** Maintain an objective, helpful, and professional tone throughout your response.\n\n"
     "Context: {context}"
 )
@@ -43,7 +45,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 
 
-# Check if the API key was found
+# Check for API key  
 if HUGGINGFACEHUB_API_TOKEN and GOOGLE_API_KEY:
     print("API key found.")
   
@@ -51,8 +53,7 @@ else:
     print("API key not found in .env file.")
     HUGGINGFACEHUB_API_TOKEN = input("Please enter your HuggingFcae API token: ")
     GOOGLE_API_KEY = input("Please enter your GOOGLE API KEY: ")
-    # You might want to store the entered key in the .env file for future use
- 
+   
     with open('.env', 'a') as f:
         f.write(f'\nHUGGINGFACEHUB_API_TOKEN={HUGGINGFACEHUB_API_TOKEN}')
         f.write(f'\nGOOGLE_API_KEY={GOOGLE_API_KEY}')
@@ -71,7 +72,7 @@ selected_model = st.sidebar.selectbox("Select Model", ["gemini-1.5-pro", "Huggin
 urls_input = st.sidebar.text_area("Enter URLs (comma-separated)", placeholder="https://blogpost.com, https://anotherblogpost.com" )
 urls = [url.strip() for url in urls_input.split(",") if url.strip()]
 
-# Welcome Message & Chat History Initialization
+
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {"role": "ai", "content": "👋Welcome! Ask me anything based on the provided links."}
@@ -125,6 +126,8 @@ if selected_model == "gemini-1.5-pro":
 else:
         st.warning("Hugging Face model support coming soon!")
         st.stop()
+
+    
 
 
 
