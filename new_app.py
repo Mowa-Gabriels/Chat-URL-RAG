@@ -1,8 +1,9 @@
 
 from dotenv import load_dotenv
-from langchain_community.document_loaders import UnstructuredURLLoader, PyPDFLoader, TextLoader, Docx2txtLoader,YoutubeLoader
+from langchain_community.document_loaders import UnstructuredURLLoader, PyPDFLoader, TextLoader, Docx2txtLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
+from langchain_chroma import Chroma
 from langchain.chains import RetrievalQA
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -11,8 +12,6 @@ from langchain_core.prompts import PromptTemplate
 from langchain_community.document_loaders.firecrawl import FireCrawlLoader
 from llama_index.readers.youtube_transcript import YoutubeTranscriptReader
 from llama_index.core import VectorStoreIndex
-from langchain.docstore.document import Document
-
 from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core import Settings
 from langchain import embeddings
@@ -23,27 +22,59 @@ import streamlit as st
 load_dotenv()
 
 template = """
-    You are an AI assistant that provides accurate answers based strictly on the given context. Do not generate or include any information not explicitly stated in the context.
+You are a super computing storage system with unparalleled precision. You answer questions **only** using the provided context.  
+If the context does not contain enough information, you must reply:  
+"The provided context does not contain the answer to this question."  
+Do not fabricate or infer details beyond the context.
 
-If the context contains the answer to a user's question, provide it directly and accurately.
-If the context does not contain the answer, state: "The provided context does not contain the answer to this question." You may then offer a generic answer, but must explicitly state that it is not based on the context.
-Always communicate clearly and professionally, using bullet points or numbered lists for complex information when appropriate.
+―――――――――――――――――――――――――――――――――――――  
+Example 1
+Context:
+“A skilled Product Manager with extensive experience in leading the development of innovative software products in the financial services, fintech, and edtech industries.”
+
+Question:
+“Which industries has Mowa Ijasanmi worked in?”
+
+Answer:
+- Financial services  
+- Fintech  
+- Edtech  
+
+―――――――――――――――――――――――――――――――――――――  
+Example 2
+Context:
+“Defined and communicated the product vision for a prize-based savings product, leading its digital transformation from a manual process to an automated, user-friendly solution. Aligned the strategy with business goals and customer requirements, driving seamless operations and transparency.”
+
+Question:
+“How did Mowa improve transparency in the prize‑based savings product?”
+
+Answer:
+- Automated the previously manual process  
+- Aligned product strategy with business goals and customer needs  
+- Introduced real‑time digital workflows to surface status and metrics  
+
+―――――――――――――――――――――――――――――――――――――  
+Example 3 
+Context:
+“Product Management: Product Strategy, Vision Definition, Roadmap Management, User Story Writing, Backlog Prioritization, Agile Methodologies, Stakeholder Collaboration, …”
+
+Question:
+“What methodology does Mowa use for backlog prioritization?”
+
+Answer:
+- Agile methodologies  
+
+―――――――――――――――――――――――――――――――――――――  
+
+Now, answer using the retrieved context below.  
+If the answer is directly present, extract it. If it’s only related, reason from what’s given. If missing, say "The provided context does not contain the answer to this question."
+
 Context: {context}
 
-Breakdown of the Prompt
-Core Instruction
-The AI is tasked with giving accurate, context-only answers.
-Explicitly forbids hallucination by stating: "Do not generate or include any information not explicitly stated in the context."
-Scenario 1: Answer in Context
-When the context has the answer, the AI must provide it directly and accurately, ensuring reliability.
-Scenario 2: Answer Not in Context
-When the context lacks the answer, the AI must:
-State: "The provided context does not contain the answer to this question."
-Optionally provide a generic answer, but clearly note it’s not context-based (e.g., "This is a generic answer and not based on the provided context.").
-Communication Style
-Ensures clarity and professionalism, with a suggestion to use lists for complex info, keeping responses structured and readable.
-    
-    """
+Question: {question}
+
+Answer:
+"""
 
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -53,8 +84,8 @@ if not HUGGINGFACEHUB_API_TOKEN or not GOOGLE_API_KEY or not FIRECRAWL_API_KEY:
     st.error("API keys not found. Please set them in your .env file.")
     st.stop()
 
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 50
+CHUNK_SIZE = 100
+CHUNK_OVERLAP = 20
 
 st.title("MultRAG")
 
@@ -85,12 +116,14 @@ if resource_type in ["PDF", "DOC", "TXT"]:
                 pages = loader.load_and_split()
                 text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
                 pages_chunks = text_splitter.split_documents(pages)
-                emb_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+                emb_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
                 if selected_vector_store == "FAISS":
                     vector_store = FAISS.from_documents(pages_chunks, emb_model)
                 else:
-                    st.warning("Chroma not available!")
-                    st.stop()
+                    persist_directory = 'file_db'
+                    vector_store = Chroma(collection_name="example_collection",
+                                 embedding_function=emb_model,
+                                 persist_directory=persist_directory)
                 retriever = vector_store.as_retriever()
                 st.success(f"File processed and stored in {selected_vector_store}")
                 
@@ -108,12 +141,14 @@ elif resource_type == "URL":
                         pages = [doc for doc in loader.lazy_load()]
                         text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
                         pages_chunks = text_splitter.split_documents(pages)
-                        emb_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+                        emb_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
                         if selected_vector_store == "FAISS":
                             vector_store = FAISS.from_documents(pages_chunks, emb_model)
                         else:
-                            st.warning("Chroma not available!")
-                            st.stop()
+                            persist_directory = 'url_db'
+                            vector_store = Chroma(collection_name="example_collection",
+                                 embedding_function=emb_model,
+                                 persist_directory=persist_directory)
                         st.success(f"File processed and stored in {selected_vector_store}")
                         retriever = vector_store.as_retriever()
                     except Exception as e:
@@ -160,7 +195,7 @@ if 'retriever' in locals():
         st.warning("Mistral-7B-Instruct-v0.3 not available!")
         st.stop()
         # llm = HuggingFaceEndpoint(task='text-generation', model="mistralai/Mistral-7B-Instruct-v0.3", max_new_tokens=1024, temperature=0.3, huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN)
-    QA_PROMPT = PromptTemplate(template=template, input_variables=["context"])
+    QA_PROMPT = PromptTemplate(template=template, input_variables=["context","question"])
     query_retriever_chain = RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
