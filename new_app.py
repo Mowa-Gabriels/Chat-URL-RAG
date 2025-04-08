@@ -1,6 +1,4 @@
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 
 
 from dotenv import load_dotenv
@@ -11,13 +9,14 @@ from langchain_chroma import Chroma
 from langchain.chains import RetrievalQA
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from langchain_huggingface.llms.huggingface_endpoint import HuggingFaceEndpoint
 from langchain_core.prompts import PromptTemplate
 from langchain_community.document_loaders.firecrawl import FireCrawlLoader
 from llama_index.readers.youtube_transcript import YoutubeTranscriptReader
 from llama_index.core import VectorStoreIndex
 from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core import Settings
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from langchain import embeddings
 import os
 import streamlit as st
@@ -26,11 +25,12 @@ import streamlit as st
 load_dotenv()
 
 template = """
-You are a super computing storage system with unparalleled precision. You answer questions **only** using the provided context.  
+You are a super computing storage system with unparalleled precision. You answer questions  using the provided context.  
 If the context does not contain enough information, you must reply:  
 "The provided context does not contain the answer to this question."  
 Do not fabricate or infer details beyond the context.
 
+however if there are information and related answers in the context, ypur reply must be expressly provided.
 ―――――――――――――――――――――――――――――――――――――  
 Example 1
 Context:
@@ -75,9 +75,7 @@ If the answer is directly present, extract it. If it’s only related, reason fr
 
 Context: {context}
 
-Question: {question}
-
-Answer:
+Question:{question}
 """
 
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
@@ -94,7 +92,7 @@ CHUNK_OVERLAP = 20
 st.title("MultRAG")
 
 st.sidebar.title("Collection Configuration ⚙️🛠️")
-selected_model = st.sidebar.selectbox("Select Model", ["Gemini-2.0-flash", "Mistral-7B-Instruct-v0.3"])
+selected_model = st.sidebar.selectbox("Select Model", ["Gemini2.5Pro", "Mistral"])
 selected_vector_store = st.sidebar.selectbox("Select Vector Store", ["FAISS", "ChromaDB"])
 resource_type = st.sidebar.selectbox("Select Resource Type", ["URL", "PDF", "DOC", "TXT","YOUTUBE"])
 
@@ -193,12 +191,11 @@ if 'youtube_engine' in st.session_state:
 
 # --- Model Loading & QA Chain Setup for Document-Based Retrieval ---
 if 'retriever' in locals():
-    if selected_model == "Gemini-2.0-flash":
-        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", api_key=GOOGLE_API_KEY)
-    elif selected_model == "Mistral-7B-Instruct-v0.3":
-        st.warning("Mistral-7B-Instruct-v0.3 not available!")
-        st.stop()
-        # llm = HuggingFaceEndpoint(task='text-generation', model="mistralai/Mistral-7B-Instruct-v0.3", max_new_tokens=1024, temperature=0.3, huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN)
+    if selected_model == "Gemini2.5Pro":
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", api_key=GOOGLE_API_KEY)
+    elif selected_model == "Mistral":
+        
+        llm = HuggingFaceEndpoint(task='text-generation', model="mistralai/Mistral-7B-Instruct-v0.3", max_new_tokens=1024, temperature=0.3, huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN)
     QA_PROMPT = PromptTemplate(template=template, input_variables=["context","question"])
     query_retriever_chain = RetrievalQA.from_chain_type(
         llm=llm,
@@ -216,7 +213,7 @@ if query_retriever_chain:
         with st.spinner("Generating response..."):
             response = query_retriever_chain({"query": user_query})
         st.write(f"🤖 AI Answer: {response['result']}")
-        with st.expander("Source Documents"):
+        with st.expander("Source"):
             for doc in response["source_documents"]:
                 st.write(doc.page_content)
 else:

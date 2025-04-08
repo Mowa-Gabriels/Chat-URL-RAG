@@ -73,6 +73,7 @@ langchain-chroma==0.2.2
 langchain-community==0.3.20
 langchain-core==0.3.50
 langchain-google-genai==2.0.9
+langchain-huggingface==0.1.2
 langchain-text-splitters==0.3.7
 langsmith==0.3.24
 llama-cloud==0.1.17
@@ -196,4 +197,3 @@ yarl==1.18.3
 youtube-transcript-api==1.0.3
 zipp==3.21.0
 zstandard==0.23.0
-pysqlite3-binary
